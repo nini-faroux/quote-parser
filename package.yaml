@@ -24,6 +24,8 @@ dependencies:
 - time
 - attoparsec
 - bytestring
+- conduit
+- conduit-extra
 
 library:
   source-dirs: src
