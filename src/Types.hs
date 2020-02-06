@@ -1,19 +1,18 @@
 module Types where
 
-import Data.Time (TimeOfDay)
+import Data.Time (TimeOfDay, UTCTime)
+import qualified Data.ByteString as BS
 import Data.Word
 import Data.Int
 
-data GlobalHeader = 
-  GlobalHeader { 
-    magicNumber   :: Word32 
-  , versionNumber :: Word16
-  , versionMinor  :: Word16 
-  , thisZone      :: Int32 
-  , sigfigs       :: Word32 
-  , snaplen       :: Word32 
-  , network       :: Word32 
-  } deriving (Show) 
+data QuotePacket = 
+  QuotePacket { 
+    packetTime :: UTCTime 
+  , acceptTime :: TimeOfDay 
+  , issueCode  :: ISIN 
+  , bids       :: [Bid] 
+  , asks       :: [Ask] 
+  } deriving (Show)
 
 data PacketHeader = 
   PacketHeader { 
@@ -25,11 +24,10 @@ data PacketHeader =
 
 data QuoteMessage = 
   QuoteMessage { 
-    packetTime :: TimeOfDay
-  , acceptTime :: TimeOfDay
-  , issueCode  :: ISIN
-  , bids       :: [Bid] 
-  , asks       :: [Ask] 
+    time   :: TimeOfDay
+  , issueC :: ISIN
+  , bs     :: [Bid] 
+  , as     :: [Ask] 
   } deriving (Show) 
 
 data ISIN = 
@@ -41,12 +39,23 @@ data ISIN =
 
 data Bid = 
   Bid { 
-    bidQuantity :: Int 
-  , bidPrice    :: Int 
+    bidQuantity :: Double
+  , bidPrice    :: Double
   } deriving (Show) 
 
 data Ask = 
   Ask { 
-    askQuantity :: Int 
-  , askPrice    :: Int 
+    askQuantity :: Double
+  , askPrice    :: Double
   } deriving (Show)
+
+data GlobalHeader = 
+  GlobalHeader { 
+    magicNumber   :: Word32 
+  , versionMajor  :: Word16
+  , versionMinor  :: Word16 
+  , thisZone      :: Int32 
+  , sigfigs       :: Word32 
+  , snaplen       :: Word32 
+  , network       :: Word32 
+  } deriving (Show) 

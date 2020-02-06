@@ -26,6 +26,8 @@ dependencies:
 - bytestring
 - conduit
 - conduit-extra
+- binary
+- bytestring-lexing
 
 library:
   source-dirs: src

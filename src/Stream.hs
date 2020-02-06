@@ -7,15 +7,17 @@ import Data.Conduit.Attoparsec
 import Control.Monad.IO.Class (liftIO)
 
 stream :: IO ()
-stream = runConduitRes $ sourceFile fileName .| conduitParserEither skipThenQuoteParser .| parserSink
-  where 
-    parserSink = do 
-      nextMessage <- await 
-      case nextMessage of 
-        Nothing -> liftIO $ putStrLn "End of Input"
-        Just parsed -> 
-          case parsed of 
-            Left err -> liftIO $ print err 
-            Right (_, quoteMessage) -> do 
-                liftIO $ print quoteMessage 
-                parserSink 
+stream = runConduitRes $ sourceFile fileName .| conduitParserEither packetParser .| parserSink
+
+parserSink :: ConduitT (Either ParseError (a, Either () QuotePacket)) o (ResourceT IO) ()
+parserSink = do 
+  nextMessage <- await 
+  case nextMessage of 
+    Nothing -> liftIO $ putStrLn "End of Input"
+    Just parsed -> 
+      case parsed of 
+      Left err -> liftIO $ print err 
+      Right (_, quoteMessage) -> 
+        case quoteMessage of 
+          Left () -> parserSink 
+          Right quoteMessage -> liftIO (print quoteMessage) >> parserSink 

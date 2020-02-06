@@ -3,17 +3,80 @@
 module Parser where 
 
 import           Types 
-import           Data.Time
+import           Data.Time (TimeOfDay(..))
+import           Data.Time.Clock (utctDay,UTCTime)
+import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import           Control.Applicative ((<|>))
 import qualified Data.Attoparsec.ByteString as P
 import qualified Data.Attoparsec.ByteString.Char8 as AC 
+import           Data.Attoparsec.Combinator (lookAhead)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
+import           Data.Binary.Get (Get(..), getWord16le, getWord32le, getInt32le, runGet)
+import           Data.ByteString.Lex.Fractional (readDecimal)
+import           Data.Word
+import           Data.Int
 
-skipThenQuoteParser :: P.Parser QuoteMessage 
-skipThenQuoteParser = skipToQuote *> quoteParser
+packetParser :: P.Parser (Either () QuotePacket) 
+packetParser = do 
+  ph <- packetHeaderParser 
+  _  <- skipToQuoteOrPacketEnd 
+  nb <- P.take 1 
+  case nb of 
+    "\255" -> return $ Left () 
+    _      -> do 
+            quote <- quoteParser 
+            return $ Right QuotePacket { 
+              packetTime = epochToUTC (tsSec ph)
+            , acceptTime = time quote 
+            , issueCode = issueC quote 
+            , bids = bs quote 
+            , asks = as quote 
+            } 
 
+epochToUTC :: Integral a => a -> UTCTime
+epochToUTC = posixSecondsToUTCTime . fromIntegral
+
+skipToQuoteOrPacketEnd :: P.Parser String 
+skipToQuoteOrPacketEnd = AC.manyTill AC.anyChar (lookAhead quoteStart <|> lookAhead packetEnd)
+  where 
+    quoteStart = AC.string "B6034" 
+    packetEnd = AC.string "\255"
+
+packetHeaderParser :: P.Parser PacketHeader 
+packetHeaderParser = do 
+  tss <- getWord32Parser
+  tsu <- getWord32Parser
+  il  <- getWord32Parser
+  ol  <- getWord32Parser
+  return PacketHeader { 
+    tsSec = tss 
+  , tsUsec = tsu 
+  , inclLen = il 
+  , origLen = ol 
+  } 
+
+getInt32Parser :: P.Parser Int32 
+getInt32Parser = do 
+  n <- P.take 4 
+  return $ convert getInt32le n
+
+getWord32Parser :: P.Parser Word32
+getWord32Parser = do 
+  n <- P.take 4 
+  return $ convert getWord32le n
+
+getWord16Parser :: P.Parser Word16 
+getWord16Parser = do 
+  n <- P.take 2 
+  return $ convert getWord16le n
+
+convert :: (Integral a, Num b) => Get a -> BS.ByteString -> b
+convert f s = fromIntegral . runGet f $ BL.fromStrict s
+           
 quoteParser :: P.Parser QuoteMessage 
 quoteParser = do
+  _ <- P.take 4
   issueCode <- issueCodeParser
   _ <- P.take 12 
   bids <- bidsParser
@@ -21,26 +84,20 @@ quoteParser = do
   asks <- asksParser
   _ <- P.take 50 
   acceptTime <- quoteAcceptTimeParser
+  _ <- P.take 1
   return QuoteMessage { 
-              packetTime = acceptTime
-            , acceptTime = acceptTime
-            , issueCode = issueCode
-            , bids = bids 
-            , asks = asks
-         } 
-
-skipToQuote :: P.Parser String 
-skipToQuote = AC.manyTill AC.anyChar quoteStart
-
-quoteStart :: P.Parser BS.ByteString 
-quoteStart = AC.string "B6034"
+    time = acceptTime
+  , issueC = issueCode
+  , bs = bids 
+  , as = asks
+  } 
 
 issueCodeParser :: P.Parser ISIN
 issueCodeParser = do 
   cc <- P.count 2 letter 
   ns <- P.count 9 alphaNum 
   cd <- P.count 1 AC.digit 
-  return $ ISIN { countryCode = cc, nsin = ns, checkDigit = read cd }
+  return ISIN { countryCode = cc, nsin = ns, checkDigit = read cd }
 
 alphaNum :: P.Parser Char
 alphaNum = letter <|> AC.digit
@@ -75,29 +132,41 @@ askParser = do
   q <- quantityParser 
   return $ Ask { askQuantity = q, askPrice = p }
 
-priceParser :: P.Parser Int 
+priceParser :: P.Parser Double
 priceParser = pqParser 5
 
-quantityParser :: P.Parser Int 
+quantityParser :: P.Parser Double
 quantityParser = pqParser 7
 
-pqParser :: Int -> P.Parser Int 
+pqParser :: Int -> P.Parser Double
 pqParser c = do 
-  n <- P.count c AC.digit 
-  return $ read n
+  n <- P.take c 
+  return $ toDouble n
 
-parseN :: IO () 
-parseN = do 
-  input <- pcapFile
-  case P.parseOnly takeN input of 
-    Right result -> print result 
-    Left err     -> putStrLn err
+toDouble :: BS.ByteString -> Double 
+toDouble s = maybe 0 fst (readDecimal s)
 
-takeN :: P.Parser BS.ByteString
-takeN = P.take 12000 
+globalHeaderParser :: P.Parser GlobalHeader 
+globalHeaderParser = do 
+  mn   <- getWord32Parser 
+  vmaj <- getWord16Parser
+  vmin <- getWord16Parser
+  tz   <- getInt32Parser 
+  sf   <- getWord32Parser 
+  sl   <- getWord32Parser 
+  nw   <- getWord32Parser 
+  return GlobalHeader { 
+    magicNumber = mn 
+  , versionMajor = vmaj 
+  , versionMinor = vmin 
+  , thisZone = tz 
+  , sigfigs = sf 
+  , snaplen = sl 
+  , network = nw 
+  } 
 
-pcapFile :: IO BS.ByteString 
-pcapFile = BS.readFile fileName
+fileName2 :: String 
+fileName2 = "./data/mdf2.pcap"
 
 fileName :: String 
 fileName = "./data/mdf-kospi200.20110216-0.pcap"
