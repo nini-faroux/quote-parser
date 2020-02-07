@@ -3,8 +3,8 @@
 module Parser where 
 
 import           Types 
-import           Data.Time (TimeOfDay(..))
-import           Data.Time.Clock (utctDay,UTCTime)
+import           Data.Time (TimeOfDay(..), TimeZone(..), LocalTime, utcToLocalTime, utc, localTimeOfDay)
+import           Data.Time.Clock (UTCTime)
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import           Control.Applicative ((<|>))
 import qualified Data.Attoparsec.ByteString as P
@@ -14,8 +14,8 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Binary.Get (Get(..), getWord16le, getWord32le, getInt32le, runGet)
 import           Data.ByteString.Lex.Fractional (readDecimal)
-import           Data.Word
-import           Data.Int
+import           Data.Word (Word32, Word16)
+import           Data.Int (Int32)
 
 packetParser :: P.Parser (Either () QuotePacket) 
 packetParser = do 
@@ -27,15 +27,15 @@ packetParser = do
     _      -> do 
             quote <- quoteParser 
             return $ Right QuotePacket { 
-              packetTime = epochToUTC (tsSec ph)
+              packetTime = epochToTimeOfDay (tsSec ph)
             , acceptTime = time quote 
             , issueCode = issueC quote 
             , bids = bs quote 
             , asks = as quote 
             } 
 
-epochToUTC :: Integral a => a -> UTCTime
-epochToUTC = posixSecondsToUTCTime . fromIntegral
+epochToTimeOfDay :: Integral a => a -> TimeOfDay
+epochToTimeOfDay ts = localTimeOfDay $ utcToLocalTime (TimeZone 540 False "KST") $ posixSecondsToUTCTime $ fromIntegral ts 
 
 skipToQuoteOrPacketEnd :: P.Parser String 
 skipToQuoteOrPacketEnd = AC.manyTill AC.anyChar (lookAhead quoteStart <|> lookAhead packetEnd)
@@ -164,9 +164,6 @@ globalHeaderParser = do
   , snaplen = sl 
   , network = nw 
   } 
-
-fileName2 :: String 
-fileName2 = "./data/mdf2.pcap"
 
 fileName :: String 
 fileName = "./data/mdf-kospi200.20110216-0.pcap"

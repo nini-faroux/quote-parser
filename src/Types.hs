@@ -1,13 +1,13 @@
 module Types where
 
-import Data.Time (TimeOfDay, UTCTime)
+import Data.Time (TimeOfDay, UTCTime, LocalTime)
 import qualified Data.ByteString as BS
 import Data.Word
 import Data.Int
 
 data QuotePacket = 
   QuotePacket { 
-    packetTime :: UTCTime 
+    packetTime :: TimeOfDay
   , acceptTime :: TimeOfDay 
   , issueCode  :: ISIN 
   , bids       :: [Bid] 

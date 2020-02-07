@@ -3,13 +3,16 @@ module StreamSorted where
 import Types
 import Parser
 import Conduit
+import Data.Time.LocalTime (todSec)
+import Data.Foldable (traverse_)
 import Data.Conduit.Attoparsec
+import Data.Fixed (Pico, mod')
 import Control.Monad.IO.Class (liftIO)
 
 streamSorted :: IO ()
-streamSorted = runConduitRes $ sourceFile fileName .| conduitParserEither packetParser .| parserSink [] 0
+streamSorted = runConduitRes $ sourceFile fileName .| conduitParserEither packetParser .| parserSink [] 3
 
-parserSink :: [QuotePacket] -> Int -> ConduitT (Either ParseError (a, Either () QuotePacket)) o (ResourceT IO) ()
+parserSink :: [QuotePacket] -> Pico -> ConduitT (Either ParseError (a, Either () QuotePacket)) o (ResourceT IO) ()
 parserSink buffer limit = do 
   nextPacket <- await 
   case nextPacket of 
@@ -22,8 +25,8 @@ parserSink buffer limit = do
           Left () -> parserSink buffer limit 
           Right quotePacket -> 
             if checkLimit limit quotePacket 
-            then liftIO (printBuffer buffer) >> parserSink [] 0 
-            else parserSink (quotePacket : buffer) (updateSeconds limit quotePacket)
+            then liftIO (printBuffer buffer) >> parserSink [] (updateLimit limit)
+            else parserSink (quotePacket : buffer) limit
 
 sortQuotes :: [QuotePacket] -> [QuotePacket] 
 sortQuotes [] = [] 
@@ -35,10 +38,14 @@ sortQuotes (p:qs) = sortQuotes [q | q <- qs, qt q <= pivTime] ++ [p] ++ sortQuot
 printBuffer :: [QuotePacket] -> IO () 
 printBuffer qs = do 
   let sqs = sortQuotes qs 
-  print sqs
+  traverse_ print sqs
 
-checkLimit :: Int -> QuotePacket -> Bool 
-checkLimit limit qp = undefined 
+checkLimit :: Pico -> QuotePacket -> Bool 
+checkLimit limit qp 
+  | packetTimeSecs == limit = True 
+  | otherwise               = False 
+  where 
+    packetTimeSecs = todSec $ packetTime qp
 
-updateSeconds :: Int -> QuotePacket -> Int 
-updateSeconds limit qp = undefined
+updateLimit :: Pico -> Pico 
+updateLimit limit = (limit + 3) `mod'` 60
