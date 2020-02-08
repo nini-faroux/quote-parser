@@ -23,10 +23,10 @@ parserSink buffer limit = do
       Right (_, quotePacket) -> 
         case quotePacket of 
           Left () -> parserSink buffer limit 
-          Right quotePacket -> 
-            if checkLimit limit quotePacket 
+          Right quote -> 
+            if checkLimit limit quote 
             then liftIO (printBuffer buffer) >> parserSink [] (updateLimit limit)
-            else parserSink (quotePacket : buffer) limit
+            else parserSink (quote : buffer) limit
 
 sortQuotes :: [QuotePacket] -> [QuotePacket] 
 sortQuotes [] = [] 

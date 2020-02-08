@@ -1,7 +1,6 @@
 module Types where
 
-import Data.Time (TimeOfDay, UTCTime, LocalTime)
-import qualified Data.ByteString as BS
+import Data.Time (TimeOfDay)
 import Data.Word
 import Data.Int
 

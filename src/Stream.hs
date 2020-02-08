@@ -20,4 +20,4 @@ parserSink = do
       Right (_, quoteMessage) -> 
         case quoteMessage of 
           Left () -> parserSink 
-          Right quoteMessage -> liftIO (print quoteMessage) >> parserSink 
+          Right quote -> liftIO (print quote) >> parserSink 

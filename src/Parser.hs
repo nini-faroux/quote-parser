@@ -3,8 +3,7 @@
 module Parser where 
 
 import           Types 
-import           Data.Time (TimeOfDay(..), TimeZone(..), LocalTime, utcToLocalTime, utc, localTimeOfDay)
-import           Data.Time.Clock (UTCTime)
+import           Data.Time (TimeOfDay(..), TimeZone(..), utcToLocalTime, localTimeOfDay)
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import           Control.Applicative ((<|>))
 import qualified Data.Attoparsec.ByteString as P
@@ -12,7 +11,7 @@ import qualified Data.Attoparsec.ByteString.Char8 as AC
 import           Data.Attoparsec.Combinator (lookAhead)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
-import           Data.Binary.Get (Get(..), getWord16le, getWord32le, getInt32le, runGet)
+import           Data.Binary.Get (Get, getWord16le, getWord32le, getInt32le, runGet)
 import           Data.ByteString.Lex.Fractional (readDecimal)
 import           Data.Word (Word32, Word16)
 import           Data.Int (Int32)
@@ -77,19 +76,19 @@ convert f s = fromIntegral . runGet f $ BL.fromStrict s
 quoteParser :: P.Parser QuoteMessage 
 quoteParser = do
   _ <- P.take 4
-  issueCode <- issueCodeParser
+  issueCode' <- issueCodeParser
   _ <- P.take 12 
-  bids <- bidsParser
+  bids' <- bidsParser
   _ <- P.take 7 
-  asks <- asksParser
+  asks' <- asksParser
   _ <- P.take 50 
-  acceptTime <- quoteAcceptTimeParser
+  acceptTime' <- quoteAcceptTimeParser
   _ <- P.take 1
   return QuoteMessage { 
-    time = acceptTime
-  , issueC = issueCode
-  , bs = bids 
-  , as = asks
+    time = acceptTime'
+  , issueC = issueCode'
+  , bs = bids' 
+  , as = asks'
   } 
 
 issueCodeParser :: P.Parser ISIN
@@ -114,8 +113,8 @@ quoteAcceptTimeParser = do
 
 bidsParser :: P.Parser [Bid] 
 bidsParser = do 
-  bs <- P.count 5 bidParser 
-  return $ reverse bs
+  bids' <- P.count 5 bidParser 
+  return $ reverse bids'
 
 asksParser :: P.Parser [Ask] 
 asksParser = P.count 5 askParser 
