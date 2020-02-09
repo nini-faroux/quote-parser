@@ -9,8 +9,8 @@ import Data.Conduit.Attoparsec
 import Data.Fixed (Pico, mod')
 import Control.Monad.IO.Class (liftIO)
 
-streamSorted :: IO ()
-streamSorted = runConduitRes $ sourceFile fileName .| conduitParserEither packetParser .| parserSink [] 3
+streamSorted :: FilePath -> IO ()
+streamSorted fp = runConduitRes $ sourceFile fp .| conduitParserEither packetParser .| parserSink [] 3
 
 parserSink :: [QuotePacket] -> Pico -> ConduitT (Either ParseError (a, Either () QuotePacket)) o (ResourceT IO) ()
 parserSink buffer limit = do 

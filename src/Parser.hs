@@ -163,6 +163,3 @@ globalHeaderParser = do
   , snaplen = sl 
   , network = nw 
   } 
-
-fileName :: String 
-fileName = "./data/mdf-kospi200.20110216-0.pcap"

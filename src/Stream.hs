@@ -6,8 +6,8 @@ import Conduit
 import Data.Conduit.Attoparsec
 import Control.Monad.IO.Class (liftIO)
 
-stream :: IO ()
-stream = runConduitRes $ sourceFile fileName .| conduitParserEither packetParser .| parserSink
+stream :: FilePath -> IO ()
+stream fp = runConduitRes $ sourceFile fp .| conduitParserEither packetParser .| parserSink
 
 parserSink :: ConduitT (Either ParseError (a, Either () QuotePacket)) o (ResourceT IO) ()
 parserSink = do 
