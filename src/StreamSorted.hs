@@ -2,6 +2,7 @@ module StreamSorted where
 
 import Types
 import Parser
+import Display 
 import Conduit
 import Data.Time.LocalTime (todSec)
 import Data.Foldable (traverse_)

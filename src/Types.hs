@@ -11,7 +11,7 @@ data QuotePacket =
   , issueCode  :: ISIN 
   , bids       :: [Bid] 
   , asks       :: [Ask] 
-  } deriving (Show)
+  } 
 
 data PacketHeader = 
   PacketHeader { 
@@ -27,26 +27,26 @@ data QuoteMessage =
   , issueC :: ISIN
   , bs     :: [Bid] 
   , as     :: [Ask] 
-  } deriving (Show) 
+  } 
 
 data ISIN = 
   ISIN { 
     countryCode :: String
   , nsin        :: String
   , checkDigit  :: Int
-  } deriving (Show)
+  } 
 
 data Bid = 
   Bid { 
     bidQuantity :: Double
   , bidPrice    :: Double
-  } deriving (Show) 
+  } 
 
 data Ask = 
   Ask { 
     askQuantity :: Double
   , askPrice    :: Double
-  } deriving (Show)
+  }
 
 data GlobalHeader = 
   GlobalHeader { 
