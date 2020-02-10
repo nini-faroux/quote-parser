@@ -86,11 +86,11 @@ showPacket quote =
   ++ "<End Packet>" ++ "\n"
 
 showIssueCode :: ISIN -> String 
-showIssueCode issueCode =
+showIssueCode issueCode' =
   "CountryCode: " 
-  ++ countryCode issueCode ++ ", " 
-  ++ "NSIN: " ++ nsin issueCode ++ ", " 
-  ++ "CheckDigit: " ++ show (checkDigit issueCode)
+  ++ countryCode issueCode' ++ ", " 
+  ++ "NSIN: " ++ nsin issueCode' ++ ", " 
+  ++ "CheckDigit: " ++ show (checkDigit issueCode')
 
 showBid :: Bid -> String 
 showBid bid = 
@@ -103,13 +103,13 @@ showAsk ask =
   ++ "Price: " ++ show (askPrice ask)
 
 showBids :: [Bid] -> String 
-showBids bs = go bs 5 
+showBids bids' = go bids' 5 
   where 
     go [] _ = "" 
-    go (b:bs) n = "Bid " ++ show n ++ ": " ++ show b ++ "\n" ++ go bs (n-1)
+    go (b:bs') n = "Bid " ++ show n ++ ": " ++ show b ++ "\n" ++ go bs' (n-1)
 
 showAsks :: [Ask] -> String 
-showAsks as = go as 1 
+showAsks asks' = go asks' 1 
   where 
     go [] _ = "" 
-    go (a:as) n = "Ask " ++ show n ++ ": " ++ show a ++ "\n" ++ go as (n+1)
+    go (a:as') n = "Ask " ++ show n ++ ": " ++ show a ++ "\n" ++ go as' (n+1)
