@@ -28,6 +28,7 @@ dependencies:
 - conduit-extra
 - binary
 - bytestring-lexing
+- optparse-applicative
 
 library:
   source-dirs: src
