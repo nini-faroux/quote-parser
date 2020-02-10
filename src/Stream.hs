@@ -2,7 +2,6 @@ module Stream where
 
 import Types
 import Parser
-import Display
 import Conduit
 import Data.Conduit.Attoparsec
 import Control.Monad.IO.Class (liftIO)
