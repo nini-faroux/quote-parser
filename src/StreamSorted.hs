@@ -28,13 +28,13 @@ parserSink buffer limit = do
     Just parsed -> 
       case parsed of 
       Left err -> liftIO $ print err 
-      Right (_, quotePacket) -> 
-        case quotePacket of 
+      Right (_, packet) -> 
+        case packet of 
           Left () -> parserSink buffer limit 
-          Right quote -> 
-            if checkLimit limit quote 
-            then liftIO (printBuffer buffer) >> parserSink [] (updateLimit limit)
-            else parserSink (quote : buffer) limit
+          Right quotePacket -> 
+            if checkLimit limit quotePacket 
+            then liftIO (printBuffer (quotePacket : buffer)) >> parserSink [] (updateLimit limit)
+            else parserSink (quotePacket : buffer) limit
 
 -- | Sort a list of quote packets based on their acceptTime field
 sortQuotes :: [QuotePacket] -> [QuotePacket] 
