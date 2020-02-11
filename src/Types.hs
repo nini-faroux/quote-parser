@@ -1,9 +1,11 @@
 module Types where
 
 import Data.Time (TimeOfDay)
-import Data.Word
-import Data.Int
+import Data.Word (Word32, Word16)
+import Data.Int  (Int32)
 
+-- | Type for representing relevant 
+-- fields of a parsed quote packet 
 data QuotePacket = 
   QuotePacket { 
     packetTime :: TimeOfDay
@@ -13,6 +15,7 @@ data QuotePacket =
   , asks       :: [Ask] 
   } 
 
+-- | Pcap Packet header per pcap docs 
 data PacketHeader = 
   PacketHeader { 
     tsSec   :: Word32 
@@ -21,6 +24,8 @@ data PacketHeader =
   , origLen :: Word32 
   } deriving (Show)
 
+-- | Type for relevant fields of 
+-- the data section of a quote packet
 data QuoteMessage = 
   QuoteMessage { 
     time   :: TimeOfDay
@@ -29,6 +34,7 @@ data QuoteMessage =
   , as     :: [Ask] 
   } 
 
+-- | IssueCode type 
 data ISIN = 
   ISIN { 
     countryCode :: String
@@ -48,6 +54,7 @@ data Ask =
   , askPrice    :: Double
   }
 
+-- | Pcap packet global header per docs
 data GlobalHeader = 
   GlobalHeader { 
     magicNumber   :: Word32 
@@ -59,8 +66,8 @@ data GlobalHeader =
   , network       :: Word32 
   } deriving (Show) 
 
--- | Display Functions 
-
+-- | Display helpers, custom Show instances 
+-- and functions for clearer results output
 instance Show QuotePacket where 
   show = showPacket 
 

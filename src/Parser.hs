@@ -2,7 +2,7 @@
 
 module Parser where 
 
-import           Types 
+import           Types (QuotePacket(..), QuoteMessage(..), GlobalHeader(..), PacketHeader(..), Bid(..), Ask(..), ISIN(..))
 import           Data.Time (TimeOfDay(..), TimeZone(..), utcToLocalTime, localTimeOfDay)
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import           Control.Applicative ((<|>))
@@ -16,6 +16,8 @@ import           Data.ByteString.Lex.Fractional (readDecimal)
 import           Data.Word (Word32, Word16)
 import           Data.Int (Int32)
 
+-- | Parse a packet, return Right QuotePacket if it's valid
+-- otherwise return Left () 
 packetParser :: P.Parser (Either () QuotePacket) 
 packetParser = do 
   ph <- packetHeaderParser 
@@ -33,15 +35,18 @@ packetParser = do
             , asks = as quote 
             } 
 
+-- | Convert the epoch time provided by the seconds parameter in the packet header to Korean time of day
 epochToTimeOfDay :: Integral a => a -> TimeOfDay
 epochToTimeOfDay ts = localTimeOfDay $ utcToLocalTime (TimeZone 540 False "KST") $ posixSecondsToUTCTime $ fromIntegral ts 
 
+-- | Skip ahead to either the start of the quote data, or the end of the packet
 skipToQuoteOrPacketEnd :: P.Parser String 
 skipToQuoteOrPacketEnd = AC.manyTill AC.anyChar (lookAhead quoteStart <|> lookAhead packetEnd)
   where 
     quoteStart = AC.string "B6034" 
     packetEnd = AC.string "\255"
 
+-- | Parse the Pcap packet header
 packetHeaderParser :: P.Parser PacketHeader 
 packetHeaderParser = do 
   tss <- getWord32Parser
@@ -70,9 +75,11 @@ getWord16Parser = do
   n <- P.take 2 
   return $ convert getWord16le n
 
+-- | Convert from ByteString to given type (Int32, Word32, or Word16)
 convert :: (Integral a, Num b) => Get a -> BS.ByteString -> b
 convert f s = fromIntegral . runGet f $ BL.fromStrict s
            
+-- Parse the relevant quote data info
 quoteParser :: P.Parser QuoteMessage 
 quoteParser = do
   _ <- P.take 4
@@ -104,6 +111,7 @@ alphaNum = letter <|> AC.digit
 letter :: P.Parser Char
 letter = AC.letter_iso8859_15
 
+-- | Parse the quote data accept time into TimeOfDay format
 quoteAcceptTimeParser :: P.Parser TimeOfDay
 quoteAcceptTimeParser = do 
   h  <- P.count 2 AC.digit 
@@ -137,6 +145,8 @@ priceParser = pqParser 5
 quantityParser :: P.Parser Double
 quantityParser = pqParser 7
 
+-- | Parse price or quantity fields of 
+-- Bids and Asks into Double format
 pqParser :: Int -> P.Parser Double
 pqParser c = do 
   n <- P.take c 
@@ -145,6 +155,7 @@ pqParser c = do
 toDouble :: BS.ByteString -> Double 
 toDouble s = maybe 0 fst (readDecimal s)
 
+-- | A helper to inspect to the global header of the pcap packet
 globalHeaderParser :: P.Parser GlobalHeader 
 globalHeaderParser = do 
   mn   <- getWord32Parser 

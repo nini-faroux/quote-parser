@@ -1,11 +1,13 @@
 module Stream where 
 
-import Types
-import Parser
-import Conduit
-import Data.Conduit.Attoparsec
+import Types (QuotePacket)
+import Parser (packetParser)
+import Conduit (ConduitT, ResourceT, runConduitRes, sourceFile, await, (.|))
+import Data.Conduit.Attoparsec (ParseError, conduitParserEither)
 import Control.Monad.IO.Class (liftIO)
 
+-- | See StreamSorted comments, the same idea except here we don't need to sort the data 
+-- based on the quote accept time, simply print packets in the order they are passed on
 stream :: FilePath -> IO ()
 stream fp = runConduitRes $ sourceFile fp .| conduitParserEither packetParser .| parserSink
 
