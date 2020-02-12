@@ -119,25 +119,23 @@ quoteAcceptTimeParser = do
   su <- P.count 4 AC.digit 
   return $ TimeOfDay (read h) (read m) (read su) 
 
+-- | Parse top 5 bids, reverse the order as we want 5th to 1st
 bidsParser :: P.Parser [Bid] 
 bidsParser = do 
   bids' <- P.count 5 bidParser 
   return $ reverse bids'
 
+-- | Parse top 5 asks
 asksParser :: P.Parser [Ask] 
 asksParser = P.count 5 askParser 
 
+-- | Parse an individual Bid 
 bidParser :: P.Parser Bid 
-bidParser = do 
-  p <- priceParser 
-  q <- quantityParser 
-  return $ Bid { bidQuantity = q, bidPrice = p }
+bidParser = Bid <$> priceParser <*> quantityParser
 
+-- | Parse an individual Ask
 askParser :: P.Parser Ask 
-askParser = do 
-  p <- priceParser 
-  q <- quantityParser 
-  return $ Ask { askQuantity = q, askPrice = p }
+askParser = Ask <$> priceParser <*> quantityParser
 
 priceParser :: P.Parser Double
 priceParser = pqParser 5
