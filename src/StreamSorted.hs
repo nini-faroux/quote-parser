@@ -24,17 +24,21 @@ parserSink :: [QuotePacket] -> Pico -> ConduitT (Either ParseError (a, Either ()
 parserSink buffer limit = do 
   nextPacket <- await 
   case nextPacket of 
-    Nothing -> liftIO $ printBuffer buffer >> liftIO (putStrLn "End of Input")
+    Nothing -> printQuotes buffer >> liftIO (putStrLn "End of Input")
     Just parsed -> 
       case parsed of 
-      Left err -> liftIO $ print err 
+      Left err -> printError err
       Right (_, packet) -> 
         case packet of 
           Left () -> parserSink buffer limit 
           Right quotePacket -> 
             if checkLimit limit quotePacket 
-            then liftIO (printBuffer (quotePacket : buffer)) >> parserSink [] (updateLimit limit)
-            else parserSink (quotePacket : buffer) limit
+            then printQuotes (quotePacket:buffer) >> resetLoop
+            else parserSink (quotePacket:buffer) limit
+  where 
+    printQuotes quotes = liftIO $ printBuffer quotes 
+    resetLoop = parserSink [] (updateLimit limit) 
+    printError e = liftIO $ print e
 
 -- | Sort a list of quote packets based on their acceptTime field
 sortQuotes :: [QuotePacket] -> [QuotePacket] 
