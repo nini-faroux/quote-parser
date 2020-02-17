@@ -13,7 +13,7 @@ data QuotePacket =
   , issueCode  :: ISIN 
   , bids       :: [Bid] 
   , asks       :: [Ask] 
-  } 
+  } deriving (Eq)
 
 -- | Pcap Packet header per pcap docs 
 data PacketHeader = 
@@ -40,19 +40,19 @@ data ISIN =
     countryCode :: String
   , nsin        :: String
   , checkDigit  :: Int
-  } 
+  } deriving (Eq)
 
 data Bid = 
   Bid { 
     bidQuantity :: Double
   , bidPrice    :: Double
-  } 
+  } deriving (Eq)
 
 data Ask = 
   Ask { 
     askQuantity :: Double
   , askPrice    :: Double
-  }
+  } deriving (Eq)
 
 -- | Pcap packet global header per docs
 data GlobalHeader = 
@@ -64,7 +64,7 @@ data GlobalHeader =
   , sigfigs       :: Word32 
   , snaplen       :: Word32 
   , network       :: Word32 
-  } deriving (Show) 
+  } deriving (Eq, Show) 
 
 -- | Display helpers, custom Show instances 
 -- and functions for clearer results output

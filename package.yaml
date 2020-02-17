@@ -29,6 +29,7 @@ dependencies:
 - binary
 - bytestring-lexing
 - optparse-applicative
+- hedgehog
 
 library:
   source-dirs: src
