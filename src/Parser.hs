@@ -16,35 +16,36 @@ import           Data.ByteString.Lex.Fractional (readDecimal)
 import           Data.Word (Word32, Word16)
 import           Data.Int (Int32)
 
--- | Parse a packet, return Right QuotePacket if it's valid
--- otherwise return Left () 
+-- | Parse packets which contain quote messages 
+-- otherwise ignore the packet
 packetParser :: P.Parser (Either () QuotePacket) 
 packetParser = do 
   ph <- packetHeaderParser 
-  _  <- skipToQuoteOrPacketEnd 
-  nb <- P.take 1 
-  case nb of 
-    "\255" -> return $ Left () 
-    _      -> do 
-            quote <- quoteParser 
-            return $ Right QuotePacket { 
-              packetTime = epochToTimeOfDay (tsSec ph)
-            , acceptTime = time quote 
-            , issueCode = issueC quote 
-            , bids = bs quote 
-            , asks = as quote 
-            } 
+  let dataLen = fromIntegral $ inclLen ph
+  if dataLen < quoteLen 
+  then P.take dataLen >> return (Left ())
+  else do 
+     _ <- P.take $ dataLen - quoteLen
+     header <- P.take 5 
+     if header /= quoteStart 
+     then P.take remaining >> return (Left ())
+     else do 
+      quote <- quoteParser 
+      return $ Right QuotePacket {
+        packetTime = epochToTimeOfDay (tsSec ph) 
+      , acceptTime = time quote 
+      , issueCode = issueC quote 
+      , bids = bs quote 
+      , asks = as quote 
+      }
+  where 
+    quoteLen = 215
+    remaining = quoteLen - 5
+    quoteStart = "B6034"
 
 -- | Convert the epoch time provided by the seconds parameter in the packet header to Korean time of day
 epochToTimeOfDay :: Integral a => a -> TimeOfDay
 epochToTimeOfDay ts = localTimeOfDay $ utcToLocalTime (TimeZone 540 False "KST") $ posixSecondsToUTCTime $ fromIntegral ts 
-
--- | Skip ahead to either the start of the quote data, or the end of the packet
-skipToQuoteOrPacketEnd :: P.Parser String 
-skipToQuoteOrPacketEnd = AC.manyTill AC.anyChar (lookAhead quoteStart <|> lookAhead packetEnd)
-  where 
-    quoteStart = AC.string "B6034" 
-    packetEnd = AC.string "\255"
 
 -- | Parse the Pcap packet header
 packetHeaderParser :: P.Parser PacketHeader 
@@ -82,7 +83,6 @@ convert f s = fromIntegral . runGet f $ BL.fromStrict s
 -- Parse the relevant quote data info
 quoteParser :: P.Parser QuoteMessage 
 quoteParser = do
-  _ <- P.take 4
   issueCode' <- issueCodeParser
   _ <- P.take 12 
   bids' <- bidsParser

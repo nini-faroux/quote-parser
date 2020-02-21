@@ -1,6 +1,7 @@
 module Main where
 
 import Options.Applicative (execParser, str, metavar, switch, short, long, help, argument, info)
+import qualified Data.ByteString as BS
 import Stream (stream)
 import StreamSorted (streamSorted)
 
@@ -25,6 +26,13 @@ data Quote =
 -- otherwise apply stream function
 run :: Quote -> IO () 
 run opts 
-  | sortedOutput opts = streamSorted fp 
-  | otherwise         = stream fp 
+  | sortedOutput opts = skipGlobalHeader fp >> streamSorted source 
+  | otherwise         = skipGlobalHeader fp >> stream source 
   where fp = inputFile opts 
+
+-- | The first 24 bytes are just the pcap global header
+skipGlobalHeader :: FilePath -> IO ()
+skipGlobalHeader fp = BS.readFile fp >>= \bytes -> BS.writeFile source (BS.drop 24 bytes)
+
+source :: FilePath 
+source = "./data/source.pcap"

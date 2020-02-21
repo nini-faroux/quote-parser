@@ -15,17 +15,7 @@ printCheck :: IO Bool -> IO ()
 printCheck m = m >>= \b -> print b
 
 parserChecks :: [IO Bool] 
-parserChecks = check <$> [ skipToQuoteTest, skipToEndTest, skipOutOfInputTest 
-                         , globalHeaderInputTest, packetParserQuoteTest, packetParserQuoteTest]
-
-skipToQuoteTest :: Property 
-skipToQuoteTest = property $ P.parseOnly skipToQuoteOrPacketEnd "abcdefB6034xyz" === Right "abcdef"
-
-skipToEndTest :: Property 
-skipToEndTest = property $ P.parseOnly skipToQuoteOrPacketEnd "abcdef\255xyz" === Right "abcdef"
-
-skipOutOfInputTest :: Property 
-skipOutOfInputTest = property $ P.parseOnly skipToQuoteOrPacketEnd "abcdefg" === Left "not enough input"
+parserChecks = check <$> [globalHeaderInputTest, packetParserQuoteTest, packetParserQuoteTest]
 
 packetParserQuoteTest :: Property 
 packetParserQuoteTest = property $ P.parseOnly packetParser quotePacketInput === Right (Right quotePacketShouldBe)
@@ -34,7 +24,7 @@ packetParserNonQuoteTest :: Property
 packetParserNonQuoteTest = property $ P.parseOnly packetParser nonQuotePacketInput === Right (Left ())
 
 globalHeaderInputTest :: Property 
-globalHeaderInputTest = property $ P.parseOnly globalHeaderInputParser globalHeaderInput === Right globalHeaderInputShouldBe
+globalHeaderInputTest = property $ P.parseOnly globalHeaderParser globalHeaderInput === Right globalHeaderInputShouldBe
 
 -- | Expected Results
 quotePacketShouldBe :: QuotePacket
