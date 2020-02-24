@@ -3,8 +3,8 @@
 module Parser where 
 
 import           Types (QuotePacket(..), QuoteMessage(..), GlobalHeader(..), PacketHeader(..), Bid(..), Ask(..), ISIN(..))
-import           Data.Time (TimeOfDay(..), TimeZone(..), utcToLocalTime, localTimeOfDay)
-import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import           Data.Time (TimeOfDay(..), TimeZone(..), UTCTime, NominalDiffTime, utcToLocalTime, localTimeOfDay, addUTCTime)
+import           Data.Time.Clock.POSIX (POSIXTime, posixSecondsToUTCTime)
 import           Control.Applicative ((<|>))
 import qualified Data.Attoparsec.ByteString as P
 import qualified Data.Attoparsec.ByteString.Char8 as AC 
@@ -32,7 +32,7 @@ packetParser = do
      else do 
       quote <- quoteParser 
       return $ Right QuotePacket {
-        packetTime = epochToTimeOfDay (tsSec ph) 
+        packetTime = epochToTimeOfDay (tsSec ph) (tsUsec ph)
       , acceptTime = time quote 
       , issueCode = issueC quote 
       , bids = bs quote 
@@ -43,9 +43,12 @@ packetParser = do
     remaining = quoteLen - 5
     quoteStart = "B6034"
 
--- | Convert the epoch time provided by the seconds parameter in the packet header to Korean time of day
-epochToTimeOfDay :: Integral a => a -> TimeOfDay
-epochToTimeOfDay ts = localTimeOfDay $ utcToLocalTime (TimeZone 540 False "KST") $ posixSecondsToUTCTime $ fromIntegral ts 
+-- | Convert the epoch time provided by the packet header parameters (seconds and microseconds) to Korean time of day
+epochToTimeOfDay :: Integral a => a -> a -> TimeOfDay
+epochToTimeOfDay ts tu = localTimeOfDay $ utcToLocalTime (TimeZone 540 False "KST") $ makeUTCTime (fromIntegral ts) (fromIntegral tu)
+
+makeUTCTime :: POSIXTime -> NominalDiffTime -> UTCTime
+makeUTCTime seconds diff = addUTCTime (diff / 1000000) (posixSecondsToUTCTime seconds)
 
 -- | Parse the Pcap packet header
 packetHeaderParser :: P.Parser PacketHeader 
@@ -114,10 +117,10 @@ letter = AC.letter_iso8859_15
 -- | Parse the quote data accept time into TimeOfDay format
 quoteAcceptTimeParser :: P.Parser TimeOfDay
 quoteAcceptTimeParser = do 
-  h  <- P.count 2 AC.digit 
-  m  <- P.count 2 AC.digit 
-  su <- P.count 4 AC.digit 
-  return $ TimeOfDay (read h) (read m) (read su) 
+  h <- P.count 2 AC.digit 
+  m <- P.count 2 AC.digit 
+  s <- P.count 4 AC.digit 
+  return $ TimeOfDay (read h) (read m) (read s / 100) 
 
 -- | Parse top 5 bids, reverse the order as we want 5th to 1st
 bidsParser :: P.Parser [Bid] 
