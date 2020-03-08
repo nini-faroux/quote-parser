@@ -33,19 +33,22 @@ parserSink sortFlag buffer limit = do
             Left () -> loop buffer 
             Right quotePacket -> 
               if checkLimit limit quotePacket 
-              then liftIO (printQuotes sortFlag (appendQuote quotePacket)) >> resetLoop
-              else loop (appendQuote quotePacket) 
+              then liftIO (printQuotes sortFlag (prependQuote quotePacket)) >> resetLoop
+              else loop (prependQuote quotePacket) 
   where 
     resetLoop = parserSink sortFlag [] (updateLimit limit) 
     loop quotes = parserSink sortFlag quotes limit
-    appendQuote quote = buffer ++ [quote]
+    prependQuote quote = quote : buffer
     printError e = liftIO $ print e
     endOfInput = liftIO $ putStrLn "End of Input"
 
 -- | Sort a list of quote packets based on their acceptTime field
-sortQuotes :: [QuotePacket] -> [QuotePacket] 
-sortQuotes [] = [] 
-sortQuotes (p:qs) = sortQuotes [q | q <- qs, qt q <= pivTime] ++ [p] ++ sortQuotes [q | q <- qs, qt q > pivTime] 
+sortQuotes :: [QuotePacket] -> [QuotePacket]
+sortQuotes = sortQs . reverse
+
+sortQs :: [QuotePacket] -> [QuotePacket] 
+sortQs [] = [] 
+sortQs (p:qs) = sortQs [q | q <- qs, qt q <= pivTime] ++ [p] ++ sortQs [q | q <- qs, qt q > pivTime] 
   where 
     pivTime = acceptTime p
     qt = acceptTime 

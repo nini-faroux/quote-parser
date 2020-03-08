@@ -8,51 +8,51 @@ import Data.Int  (Int32)
 -- fields of a parsed quote packet 
 data QuotePacket = 
   QuotePacket { 
-    packetTime :: TimeOfDay
-  , acceptTime :: TimeOfDay 
-  , issueCode  :: ISIN 
-  , bids       :: [Bid] 
-  , asks       :: [Ask] 
-  } deriving (Eq)
+    packetTime :: {-# UNPACK #-} !TimeOfDay
+  , acceptTime :: {-# UNPACK #-} !TimeOfDay 
+  , issueCode  :: {-# UNPACK #-} !ISIN 
+  , bids       :: ![Bid] 
+  , asks       :: ![Ask] 
+  } 
 
 -- | Pcap Packet header per pcap docs 
 data PacketHeader = 
   PacketHeader { 
-    tsSec   :: Word32 
-  , tsUsec  :: Word32 
-  , inclLen :: Word32 
-  , origLen :: Word32 
+    tsSec   :: {-# UNPACK #-} !Word32 
+  , tsUsec  :: {-# UNPACK #-} !Word32 
+  , inclLen :: {-# UNPACK #-} !Word32 
+  , origLen :: {-# UNPACK #-} !Word32 
   } deriving (Show)
 
 -- | Type for relevant fields of 
 -- the data section of a quote packet
 data QuoteMessage = 
   QuoteMessage { 
-    time   :: TimeOfDay
-  , issueC :: ISIN
-  , bs     :: [Bid] 
-  , as     :: [Ask] 
+    time   :: {-# UNPACK #-} !TimeOfDay
+  , issueC :: {-# UNPACK #-} !ISIN
+  , bs     :: ![Bid] 
+  , as     :: ![Ask] 
   } 
 
 -- | IssueCode type 
 data ISIN = 
   ISIN { 
-    countryCode :: String
-  , nsin        :: String
-  , checkDigit  :: Int
-  } deriving (Eq)
+    countryCode :: !String
+  , nsin        :: !String
+  , checkDigit  :: {-# UNPACK #-} !Int
+  } 
 
 data Bid = 
   Bid { 
-    bidQuantity :: Double
-  , bidPrice    :: Double
-  } deriving (Eq)
+    bidQuantity :: {-# UNPACK #-} !Double
+  , bidPrice    :: {-# UNPACK #-} !Double
+  } 
 
 data Ask = 
   Ask { 
-    askQuantity :: Double
-  , askPrice    :: Double
-  } deriving (Eq)
+    askQuantity :: {-# UNPACK #-} !Double
+  , askPrice    :: {-# UNPACK #-} !Double
+  }
 
 -- | Pcap packet global header per docs
 data GlobalHeader = 
@@ -64,7 +64,7 @@ data GlobalHeader =
   , sigfigs       :: Word32 
   , snaplen       :: Word32 
   , network       :: Word32 
-  } deriving (Eq, Show) 
+  } deriving (Show) 
 
 -- | Display helpers, custom Show instances 
 -- and functions for clearer results output

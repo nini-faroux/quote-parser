@@ -8,7 +8,6 @@ import           Data.Time.Clock.POSIX (POSIXTime, posixSecondsToUTCTime)
 import           Control.Applicative ((<|>))
 import qualified Data.Attoparsec.ByteString as P
 import qualified Data.Attoparsec.ByteString.Char8 as AC 
-import           Data.Attoparsec.Combinator (lookAhead)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Binary.Get (Get, getWord16le, getWord32le, getInt32le, runGet)
@@ -156,7 +155,7 @@ pqParser c = do
 toDouble :: BS.ByteString -> Double 
 toDouble s = maybe 0 fst (readDecimal s)
 
--- | A helper to inspect to the global header of the pcap packet
+-- | A helper to inspect the global header of the pcap packet
 globalHeaderParser :: P.Parser GlobalHeader 
 globalHeaderParser = do 
   mn   <- getWord32Parser 
