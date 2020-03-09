@@ -44,14 +44,22 @@ parserSink sortFlag buffer limit = do
 
 -- | Sort a list of quote packets based on their acceptTime field
 sortQuotes :: [QuotePacket] -> [QuotePacket]
-sortQuotes = sortQs . reverse
+sortQuotes = sort' . reverse
 
-sortQs :: [QuotePacket] -> [QuotePacket] 
-sortQs [] = [] 
-sortQs (p:qs) = sortQs [q | q <- qs, qt q <= pivTime] ++ [p] ++ sortQs [q | q <- qs, qt q > pivTime] 
+sort' :: [QuotePacket] -> [QuotePacket]
+sort' []  = []
+sort' [q] = [q]
+sort' qs  = merge (sort' firstPart) (sort' secondPart) []
   where 
-    pivTime = acceptTime p
-    qt = acceptTime 
+    (firstPart, secondPart) = (take n qs, drop n qs) 
+    n = length qs `div` 2
+
+merge :: [QuotePacket] -> [QuotePacket] -> [QuotePacket] -> [QuotePacket]
+merge [] qs2 acc = reverse acc ++ qs2
+merge qs1 [] acc = reverse acc ++ qs1
+merge qs1@(x:xs) qs2@(y:ys) acc 
+    | acceptTime x < acceptTime y = merge xs qs2 (x:acc)
+    | otherwise                   = merge qs1 ys (y:acc) 
 
 printQuotes :: Bool -> [QuotePacket] -> IO ()
 printQuotes sortFlag quotes
