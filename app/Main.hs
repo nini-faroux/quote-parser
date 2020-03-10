@@ -9,20 +9,20 @@ import Stream (stream)
 main :: IO () 
 main = execParser options >>= run 
   where 
-    parser = Quote <$> argument str (metavar "<FILEPATH>") 
-                   <*> switch (short 'r' <> long "sort" <> help "Sort output on packet accept time") 
+    parser = Options <$> argument str (metavar "<FILEPATH>") 
+                     <*> switch (short 'r' <> long "sort" <> help "Sort output on packet accept time") 
     options = info parser mempty 
 
 -- | Record representing command inputs
-data Quote = 
-  Quote { 
+data Options = 
+  Options { 
     inputFilePath :: FilePath
   , sortedOutput  :: Bool 
   } 
 
 -- | If the user supplies '-r' or '--sort' flag 
 -- sort the output otherwise output in given order
-run :: Quote -> IO () 
+run :: Options -> IO () 
 run options 
   | sortedFlag = stream' True
   | otherwise  = stream' False
