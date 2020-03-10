@@ -63,8 +63,8 @@ merge qs1@(x:xs) qs2@(y:ys) acc
 
 printQuotes :: Bool -> [QuotePacket] -> IO ()
 printQuotes sortFlag quotes
-  | sortFlag  = print' (sortQuotes quotes) 
-  | otherwise = print' quotes
+  | sortFlag  = print' $ sortQuotes quotes
+  | otherwise = print' $ reverse quotes
   where print' = traverse_ print 
 
 -- | Check if the packet time has reached 
