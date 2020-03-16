@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser where 
+module Parser (packetParser) where 
 
 import           Types (QuotePacket(..), QuoteMessage(..), GlobalHeader(..), PacketHeader(..), Bid(..), Ask(..), ISIN(..))
 import           Data.Time (TimeOfDay(..), TimeZone(..), UTCTime, NominalDiffTime, utcToLocalTime, localTimeOfDay, addUTCTime)

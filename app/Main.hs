@@ -1,4 +1,4 @@
-module Main where
+module Main (main) where
 
 import Options.Applicative (execParser, str, metavar, switch, short, long, help, argument, info)
 import qualified Data.ByteString as BS

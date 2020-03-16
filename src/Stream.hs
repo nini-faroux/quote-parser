@@ -1,4 +1,4 @@
-module Stream where 
+module Stream (stream) where 
 
 import Types (QuotePacket(..))
 import Parser (packetParser)

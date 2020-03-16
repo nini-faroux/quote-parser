@@ -1,4 +1,12 @@
-module Types where
+module Types (
+    QuotePacket(..)
+  , QuoteMessage(..)
+  , PacketHeader(..) 
+  , Bid(..) 
+  , Ask(..) 
+  , ISIN(..)
+  , GlobalHeader(..)
+  ) where
 
 import Data.Time (TimeOfDay)
 import Data.Word (Word32, Word16)
