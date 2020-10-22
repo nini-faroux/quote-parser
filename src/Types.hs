@@ -67,13 +67,13 @@ data Ask
 -- | Pcap packet global header per docs
 data GlobalHeader
   = GlobalHeader
-      { magicNumber :: Word32,
-        versionMajor :: Word16,
-        versionMinor :: Word16,
-        thisZone :: Int32,
-        sigfigs :: Word32,
-        snaplen :: Word32,
-        network :: Word32
+      { magicNumber :: !Word32,
+        versionMajor :: !Word16,
+        versionMinor :: !Word16,
+        thisZone :: !Int32,
+        sigfigs :: !Word32,
+        snaplen :: !Word32,
+        network :: !Word32
       }
   deriving (Show)
 

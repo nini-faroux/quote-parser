@@ -17,8 +17,8 @@ main = execParser options >>= run
 -- | Record representing command inputs
 data Options
   = Options
-      { inputFilePath :: FilePath,
-        sortedOutput :: Bool
+      { inputFilePath :: !FilePath,
+        sortedOutput :: !Bool
       }
 
 -- | If the user supplies '-r' or '--sort' flag
