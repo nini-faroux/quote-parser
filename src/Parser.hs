@@ -11,6 +11,8 @@ import qualified Data.Attoparsec.ByteString.Char8 as AC
 import Data.Binary.Get (Get, getInt32le, getWord16le, getWord32le, runGet)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
+import Text.Read (readMaybe)
+import Data.Maybe (fromMaybe)
 import Data.ByteString.Lex.Fractional (readDecimal)
 import Data.Int (Int32)
 import Data.Time (NominalDiffTime, TimeOfDay (..), TimeZone (..), UTCTime, addUTCTime, localTimeOfDay, utcToLocalTime)
@@ -112,7 +114,7 @@ issueCodeParser = do
   cc <- P.count 2 letter
   ns <- P.count 9 alphaNum
   cd <- P.count 1 AC.digit
-  return ISIN {countryCode = cc, nsin = ns, checkDigit = read cd}
+  return ISIN {countryCode = cc, nsin = ns, checkDigit = readMaybe' cd 0}
 
 alphaNum :: P.Parser Char
 alphaNum = letter <|> AC.digit
@@ -126,7 +128,7 @@ quoteAcceptTimeParser = do
   h <- P.count 2 AC.digit
   m <- P.count 2 AC.digit
   s <- P.count 4 AC.digit
-  return $ TimeOfDay (read h) (read m) (read s / 100)
+  return $ TimeOfDay (readMaybe' h 0) (readMaybe' m 0) (readMaybe' s 0 / 100)
 
 -- | Parse top 5 bids, reverse the order as we want 5th to 1st
 bidsParser :: P.Parser [Bid]
@@ -161,6 +163,9 @@ pqParser c = do
 
 toDouble :: BS.ByteString -> Double
 toDouble s = maybe 0 fst (readDecimal s)
+
+readMaybe' :: Read a => String -> a -> a
+readMaybe' xs default' = fromMaybe default' $ readMaybe xs
 
 -- | A helper to inspect the global header of the pcap packet
 globalHeaderParser :: P.Parser GlobalHeader
