@@ -2,3 +2,4 @@
 stock-parser.cabal
 *~
 .DS_Store
+.hie
