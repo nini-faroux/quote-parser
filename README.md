@@ -2,7 +2,18 @@
 
 A program to parse and print quote messages from a market data feed. See 'problem.txt' for a full description of the problem.
 
-To build and run:
+Run with Docker:
+
+```bash
+ docker run ninifaroux/quote-parser
+```
+To sort the output based on the quote accept time:
+
+```bash
+ docker run -e sort=-r ninifaroux/quote-parser
+```
+
+Build and run with Stack:
 
 ```bash
  stack build
