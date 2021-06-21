@@ -15,7 +15,7 @@ printCheck :: IO Bool -> IO ()
 printCheck m = m >>= \b -> print b
 
 parserChecks :: [IO Bool] 
-parserChecks = check <$> [globalHeaderInputTest, packetParserQuoteTest, packetParserQuoteTest]
+parserChecks = check <$> [globalHeaderInputTest, packetParserQuoteTest, packetParserQuoteTest, packetParserNonQuoteTest]
 
 packetParserQuoteTest :: Property 
 packetParserQuoteTest = property $ P.parseOnly packetParser quotePacketInput === Right (Right quotePacketShouldBe)
@@ -30,8 +30,8 @@ globalHeaderInputTest = property $ P.parseOnly globalHeaderParser globalHeaderIn
 quotePacketShouldBe :: QuotePacket
 quotePacketShouldBe = 
   QuotePacket { 
-    packetTime = TimeOfDay 09 00 00
-  , acceptTime = TimeOfDay 09 00 88
+    packetTime = TimeOfDay 09 00 00.947704
+  , acceptTime = TimeOfDay 09 00 00.88
   , issueCode = ISIN { countryCode = "KR", nsin = "4301F3252", checkDigit = 1 } 
   , bids = bidList 
   , asks = askList 

@@ -1,9 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser
-  ( packetParser,
-  )
-where
+module Parser where
 
 import Control.Applicative ((<|>))
 import qualified Data.Attoparsec.ByteString as P
